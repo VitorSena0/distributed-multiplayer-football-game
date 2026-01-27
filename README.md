@@ -56,6 +56,7 @@ O Distributed Multiplayer Football é um jogo de futebol top‑down onde múltip
 - **Ranking global** com cache Redis
 - **Persistência de estatísticas** em PostgreSQL
 - **Containerização** completa com Docker
+- **Deploy** com aws atuando como hospedagem e balanceador de carga
 
 <img width="1911" height="767" alt="Tela do jogo" src="https://github.com/user-attachments/assets/9e0962bc-fe47-4865-a3ff-edb069c746cc" />
 

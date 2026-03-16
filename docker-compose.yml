@@ -11,8 +11,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    ports:
-      - "127.0.0.1:5433:5432"
+    expose:
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-football_db}"]
       interval: 5s
@@ -23,8 +23,8 @@ services:
   redis:
     image: redis:7
     container_name: multiplayer-soccer-redis
-    ports:
-      - "127.0.0.1:6379:6379" # opcional: mapeia para host local apenas
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -35,7 +35,10 @@ services:
     restart: unless-stopped
 
   app:
-    image: multiplayer-soccer-app:v7
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: multiplayer-soccer-app:latest
     container_name: multiplayer-soccer-app
     environment:
       DB_HOST: postgres
@@ -58,10 +61,13 @@ services:
     restart: unless-stopped
 
   nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     image: multiplayer-soccer-nginx:latest
     container_name: multiplayer-soccer-nginx
     ports:
-      - "80:80"
+      - "${HTTP_PORT:-8081}:80"
     depends_on:
       - app
     restart: unless-stopped

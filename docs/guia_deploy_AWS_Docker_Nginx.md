@@ -300,7 +300,8 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
+    image: multiplayer-soccer-app:latest
     container_name: multiplayer-soccer-app
     expose:
       - "3000"
@@ -309,9 +310,10 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    image: multiplayer-soccer-nginx:latest
     container_name: multiplayer-soccer-nginx
     ports:
-      - "80:80"
+      - "${HTTP_PORT:-8081}:80"
     depends_on:
       - app
 ```
@@ -319,7 +321,18 @@ services:
 Para rodar **localmente** (na sua máquina de desenvolvimento):
 
 ```bash
-docker compose up --build
+docker compose up -d --build
+```
+
+Se você rodar apenas `docker compose up -d` sem `build:` no Compose ou sem ter construído as imagens antes,
+o Docker tentará fazer `pull` de `multiplayer-soccer-app` e `multiplayer-soccer-nginx`, o que gera o erro
+`pull access denied`.
+
+O mapeamento HTTP acima usa a porta `8081` por padrão para evitar conflito com serviços locais que já ocupam a porta `80` ou `8080`.
+Se quiser publicar em `80`, defina a variável antes de subir:
+
+```bash
+HTTP_PORT=80 docker compose up -d --build
 ```
 
 Acesse:

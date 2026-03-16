@@ -438,6 +438,43 @@ canvas {
     min-height: 120px;
 }
 
+.team-badge-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: default;
+    opacity: 1;
+}
+
+.team-badge-button:disabled {
+    opacity: 1;
+    color: #ffffff;
+}
+
+.team-badge-button img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.team-badge-button.red {
+    border-color: rgba(255, 99, 99, 0.8);
+}
+
+.team-badge-button.blue {
+    border-color: rgba(126, 231, 140, 0.8);
+}
+
 .goalscorers-list.red {
     background: rgba(255, 0, 0, 0.1);
     border: 1px solid #ff0000;
@@ -464,4 +501,17 @@ canvas {
     color: #ffd700;
     font-weight: bold;
     border: 1px solid #ffd700;
+}
+
+@media (max-width: 768px) {
+        .team-badge-button {
+            font-size: 12px;
+            padding: 5px;
+            gap: 6px;
+        }
+
+        .team-badge-button img {
+            width: 34px;
+            height: 34px;
+        }
 }

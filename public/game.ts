@@ -44,6 +44,48 @@ const config: Config = {
   },
 };
 
+const TEAM_PRESENTATION = {
+  red: {
+    name: 'Flamengo',
+    badge: '/flamengo-botao.png',
+  },
+  blue: {
+    name: 'Palmeiras',
+    badge: '/palmeiras-botao.png',
+  },
+} as const;
+
+function getTeamDisplayName(team: 'red' | 'blue'): string {
+  return TEAM_PRESENTATION[team].name;
+}
+
+function createTeamBadgeButton(team: 'red' | 'blue'): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `team-badge-button ${team}`;
+  button.disabled = true;
+
+  const logo = document.createElement('img');
+  logo.src = TEAM_PRESENTATION[team].badge;
+  logo.alt = `Escudo ${getTeamDisplayName(team)}`;
+  logo.loading = 'lazy';
+
+  const label = document.createElement('span');
+  label.textContent = getTeamDisplayName(team);
+
+  button.appendChild(logo);
+  button.appendChild(label);
+  return button;
+}
+
+const TEAM_BADGE_IMAGES: Record<'red' | 'blue', HTMLImageElement> = {
+  red: new Image(),
+  blue: new Image(),
+};
+
+TEAM_BADGE_IMAGES.red.src = TEAM_PRESENTATION.red.badge;
+TEAM_BADGE_IMAGES.blue.src = TEAM_PRESENTATION.blue.badge;
+
 // ===============================
 // Elementos do DOM
 // - Criamos tudo via JavaScript para deixar o index.html mais limpo
@@ -273,7 +315,7 @@ function initUI(): void {
   elements.timerBottom.id = 'timer-bottom';
   elements.timerBottom.textContent = '1:00';
   elements.scoreboard.id = 'scoreboard';
-  elements.scoreboard.textContent = 'Red: 0 | Blue: 0';
+  elements.scoreboard.textContent = `${getTeamDisplayName('red')}: 0 | ${getTeamDisplayName('blue')}: 0`;
 
   elements.hudBottom.appendChild(elements.ping);
   elements.hudBottom.appendChild(elements.timerBottom);
@@ -285,6 +327,9 @@ function initUI(): void {
   elements.redGoalscorers.className = 'goalscorers-list red';
   elements.blueGoalscorers.id = 'blue-goalscorers';
   elements.blueGoalscorers.className = 'goalscorers-list blue';
+
+  elements.redGoalscorers.appendChild(createTeamBadgeButton('red'));
+  elements.blueGoalscorers.appendChild(createTeamBadgeButton('blue'));
 
   elements.goalscorersPanel.appendChild(elements.redGoalscorers);
   elements.goalscorersPanel.appendChild(elements.blueGoalscorers);
@@ -555,7 +600,7 @@ const socketHandlers = {
       state.gameState.players[socket.id].x = state.currentTeam === 'red' ? 100 : 700;
       state.gameState.players[socket.id].y = 300;
     }
-    alert(`Você foi movido para o time ${state.currentTeam.toUpperCase()}`);
+    alert(`Você foi movido para o ${getTeamDisplayName(state.currentTeam)}`);
     updateUI();
   },
 
@@ -592,7 +637,7 @@ const socketHandlers = {
   },
 
   waitingForPlayers: (data: WaitingForPlayersData) => {
-    const waitingText = `Aguardando jogadores... Vermelho: ${data.redCount} | Azul: ${data.blueCount}`;
+    const waitingText = `Aguardando jogadores... ${getTeamDisplayName('red')}: ${data.redCount} | ${getTeamDisplayName('blue')}: ${data.blueCount}`;
     elements.waitingScreen.textContent = waitingText;
     elements.waitingScreen.style.display = 'block';
     state.canMove = false;
@@ -604,7 +649,7 @@ const socketHandlers = {
   goalScored: (data: GoalScoredData) => {
     state.gameState.ball.x = -1000;
     state.gameState.ball.y = -1000;
-    console.log(`GOL do time ${data.team}!`);
+    console.log(`GOL do ${getTeamDisplayName(data.team)}!`);
   },
 
   ballReset: (data: BallResetData) => {
@@ -684,7 +729,7 @@ function updateScoreboard(): void {
   playerGoals.sort((a, b) => b.goals - a.goals);
   
   // Monta a string do placar
-  let scoreboardText = `Red: ${redScore} | Blue: ${blueScore}`;
+  let scoreboardText = `${getTeamDisplayName('red')}: ${redScore} | ${getTeamDisplayName('blue')}: ${blueScore}`;
   
 
   
@@ -753,6 +798,9 @@ function updateGoalscorersPanel(): void {
   elements.redGoalscorers.innerHTML = '';
   elements.blueGoalscorers.innerHTML = '';
 
+  elements.redGoalscorers.appendChild(createTeamBadgeButton('red'));
+  elements.blueGoalscorers.appendChild(createTeamBadgeButton('blue'));
+
   // Renderiza artilheiros vermelhos
   redGoalscorers.forEach((scorer, index) => {
     const div = document.createElement('div');
@@ -781,7 +829,7 @@ function updateGoalscorersPanel(): void {
 function showWinner(winner: 'red' | 'blue' | 'draw'): void {
   elements.winnerDisplay.style.display = 'block';
   elements.winnerDisplay.style.opacity = '1';
-  elements.winnerDisplay.textContent = winner === 'draw' ? 'Empate!' : `Time ${winner.toUpperCase()} venceu!`;
+  elements.winnerDisplay.textContent = winner === 'draw' ? 'Empate!' : `${getTeamDisplayName(winner)} venceu!`;
 }
 
 function hideWinner(): void {
@@ -1075,6 +1123,25 @@ function draw(): void {
         ctx.beginPath();
         ctx.arc(player.x, player.y, config.player.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        // Desenha o escudo do time sobre o jogador, mantendo o formato circular.
+        const badgeImage = TEAM_BADGE_IMAGES[player.team];
+        const badgeRadius = config.player.radius - 2;
+        if (badgeImage.complete && badgeImage.naturalWidth > 0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, badgeRadius, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(
+            badgeImage,
+            player.x - badgeRadius,
+            player.y - badgeRadius,
+            badgeRadius * 2,
+            badgeRadius * 2
+          );
+          ctx.restore();
+        }
+
         ctx.globalAlpha = 1.0;
 
         if (id === socket.id) {
